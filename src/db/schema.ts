@@ -1,16 +1,13 @@
-import { pgTable, text, timestamp, uuid, integer, pgEnum } from "drizzle-orm/pg-core";
-
-export const roleEnum = pgEnum("role", ["SUPER_ADMIN", "ADMIN", "USER", "CD"]);
-export const orderStatusEnum = pgEnum("status", ["pending", "assumed", "in_transit", "delivered", "canceled"]);
+import { pgTable, text, timestamp, uuid, integer } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
-  role: roleEnum("role").default("USER").notNull(),
+  role: text("role").default("USER").notNull(), // Switched from enum to text for stability
   workLocation: text("work_location"),
-  whatsapp: text("whatsapp"), // Added for CD notifications
+  whatsapp: text("whatsapp"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -36,7 +33,7 @@ export const transfers = pgTable("transfers", {
 export const orders = pgTable("orders", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").references(() => users.id).notNull(),
-  status: orderStatusEnum("status").default("pending").notNull(),
+  status: text("status").default("pending").notNull(), // Switched from enum to text
   assignedCdId: uuid("assigned_cd_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -45,7 +42,7 @@ export const orders = pgTable("orders", {
 export const orderItems = pgTable("order_items", {
   id: uuid("id").primaryKey().defaultRandom(),
   orderId: uuid("order_id").references(() => orders.id).notNull(),
-  productName: text("product_name").notNull(), // Changed from productId to be more flexible/text-based
-  quantity: text("quantity").notNull(), // Changed to text for "2 boxes" etc
+  productName: text("product_name").notNull(),
+  quantity: text("quantity").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

@@ -530,7 +530,7 @@ export default function Dashboard() {
                 className="w-full h-full object-cover"
               />
               {/* Camera Frame Overlay */}
-              <div className="absolute inset-0 border-[60px] border-black/40 pointer-events-none">
+              <div className="absolute inset-0 border-60 border-black/40 pointer-events-none">
                  <div className="w-full h-full border border-white/20" />
               </div>
               

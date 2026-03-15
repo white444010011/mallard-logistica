@@ -63,7 +63,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-black text-white selection:bg-white selection:text-black flex flex-col items-center justify-center p-8">
+    <div className="min-h-dvh bg-black text-white selection:bg-white selection:text-black flex flex-col items-center justify-center p-8">
       <div className="w-full max-w-sm">
         
         {/* Progress header or Back button */}
