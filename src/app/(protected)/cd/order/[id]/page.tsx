@@ -1,5 +1,5 @@
 import { db } from '@/db';
-import { orders, products, orderItems, users } from '@/db/schema';
+import { orders, orderItems, users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { decrypt } from '@/lib/auth';
@@ -28,13 +28,12 @@ export default async function CdOrderPage(props: { params: Promise<{ id: string 
 
   if (!orderData) return <div>Pedido não encontrado.</div>;
 
-  // Manual join for items and products
+  // Fetch items
   const items = await db.select({
       quantity: orderItems.quantity,
-      product: products
+      product: { name: orderItems.productName }
   })
   .from(orderItems)
-  .leftJoin(products, eq(orderItems.productId, products.id))
   .where(eq(orderItems.orderId, params.id));
 
   // If order is assigned, fetch the CD user who assumed it
