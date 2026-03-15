@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     // 3. Create Session (JWT)
     const sessionToken = await encrypt({
       userId: user.id,
-      role: user.role,
+      role: user.role as any,
     });
 
     // 4. Set HTTP-Only Cookie

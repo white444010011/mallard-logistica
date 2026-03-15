@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     // Create Session
     const sessionToken = await encrypt({
       userId: newUser.id,
-      role: newUser.role,
+      role: newUser.role as any,
     });
 
     const response = NextResponse.json({ 
