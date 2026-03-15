@@ -33,7 +33,14 @@ export async function POST(request: Request) {
       role: newUser.role,
     });
 
-    const response = NextResponse.json({ success: true, role: newUser.role });
+    const response = NextResponse.json({ 
+      success: true, 
+      user: {
+        name: newUser.name,
+        role: newUser.role,
+        location: newUser.workLocation
+      }
+    });
     response.cookies.set('session', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

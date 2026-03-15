@@ -16,7 +16,9 @@ import {
   ChevronRight,
   X,
   Trash2,
-  Send
+  Send,
+  Mic,
+  ShieldAlert
 } from 'lucide-react';
 import locationsData from '@/data/locations.json';
 import { cn } from '@/lib/utils';
@@ -190,6 +192,39 @@ export default function Dashboard() {
     router.push('/login');
   };
 
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isCD = user?.role === 'CD';
+  const canUpdate = isAdmin || isCD;
+
+  const handleAIUpdate = async (id: string, text: string) => {
+    if (!text.trim()) return;
+    setIsSubmitting(true);
+    try {
+      // 1. Process with AI
+      const aiRes = await fetch('/api/ai/process-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      const { status } = await aiRes.json();
+      
+      if (!status) throw new Error("IA não identificou status");
+
+      // 2. Update DB
+      await fetch(`/api/transfers/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+
+      window.location.reload();
+    } catch (err) {
+      alert("Falha ao processar atualização: " + err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -204,12 +239,24 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold">Mallard Group</p>
-              <h1 className="text-sm font-semibold text-zinc-200">Logistics Hub • {user.location}</h1>
+              <h1 className="text-sm font-semibold text-zinc-200">
+                {isAdmin ? "Painel Administrativo" : "Logistics Hub"} • {user.location}
+              </h1>
             </div>
           </div>
-          <button onClick={handleLogout} className="w-10 h-10 rounded-full border border-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-all">
-            <LogOut className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-3">
+            {isAdmin && (
+              <button 
+                onClick={() => router.push('/admin')}
+                className="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all bg-zinc-900/50"
+              >
+                <ShieldAlert className="w-4 h-4" />
+              </button>
+            )}
+            <button onClick={handleLogout} className="w-10 h-10 rounded-full border border-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-all">
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </header>
 
         {/* Action Grid */}
@@ -306,7 +353,7 @@ export default function Dashboard() {
                     </button>
                   </div>
                 ))}
-              </div>
+            </div>
 
               {/* Add Item Form */}
               <div className="grid grid-cols-[1fr,80px,50px] gap-2">
@@ -368,57 +415,89 @@ export default function Dashboard() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.05 }}
                 className={cn(
-                  "p-5 flex gap-5 active:scale-[0.98] transition-all",
+                  "p-5 flex flex-col gap-4 active:scale-[0.98] transition-all",
                   item.type === 'transport' ? "luxury-card" : "luxury-card-dashed"
                 )}
               >
-                {item.type === 'transport' ? (
-                  <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-zinc-800">
-                    <img src={item.photoUrl} alt="Logistic" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
-                  </div>
-                ) : (
-                  <div className="w-16 h-16 rounded-xl bg-zinc-950 border border-zinc-800/50 flex items-center justify-center shrink-0">
-                    <Package className="w-6 h-6 text-zinc-700" />
-                  </div>
-                )}
-                
-                <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="truncate">
-                      {item.type === 'transport' ? (
-                        <div className="flex items-center gap-2 text-xs font-bold tracking-tight">
-                          <span className="text-zinc-200">{item.origin}</span>
-                          <ArrowRight className="w-3 h-3 text-zinc-600" />
-                          <span className="text-zinc-500">{item.destination}</span>
-                        </div>
-                      ) : (
-                        <div className="space-y-0.5">
-                          <h3 className="text-xs font-bold text-zinc-200">
-                            {item.items && item.items.length > 0 
-                              ? item.items.map(i => i.productName).join(', ') 
-                              : "Lista de Insumos"}
-                          </h3>
-                          <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
-                            {item.items && item.items.length > 0 
-                              ? `${item.items.length} itens solicitados` 
-                              : "Requisição ao CD"}
-                          </p>
-                        </div>
-                      )}
+                <div className="flex gap-5">
+                  {item.type === 'transport' ? (
+                    <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-zinc-800">
+                      <img src={(item as TransportItem).photoUrl} alt="Logistic" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
                     </div>
-                    <div className="badge-minimal bg-black border-zinc-800 text-zinc-500 whitespace-nowrap">
-                      {item.status}
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-zinc-950 border border-zinc-800/50 flex items-center justify-center shrink-0">
+                      <Package className="w-6 h-6 text-zinc-700" />
                     </div>
-                  </div>
+                  )}
                   
-                  <div className="flex items-center justify-between text-[10px] text-zinc-600 font-bold uppercase tracking-widest mt-2">
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="w-3 h-3" />
-                      {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="truncate">
+                        {item.type === 'transport' ? (
+                          <div className="flex items-center gap-2 text-xs font-bold tracking-tight">
+                            <span className="text-zinc-200">{(item as TransportItem).origin}</span>
+                            <ArrowRight className="w-3 h-3 text-zinc-600" />
+                            <span className="text-zinc-500">{(item as TransportItem).destination}</span>
+                          </div>
+                        ) : (
+                          <div className="space-y-0.5">
+                            <h3 className="text-xs font-bold text-zinc-200">
+                              {item.items && item.items.length > 0 
+                                ? item.items.map(i => i.productName).join(', ') 
+                                : "Lista de Insumos"}
+                            </h3>
+                            <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
+                              {item.items && item.items.length > 0 
+                                ? `${item.items.length} itens solicitados` 
+                                : "Requisição ao CD"}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="badge-minimal bg-black border-zinc-800 text-zinc-500 whitespace-nowrap">
+                        {item.status}
+                      </div>
                     </div>
-                    <span className="text-zinc-800">#{item.id.slice(0, 4)}</span>
+                    
+                    <div className="flex items-center justify-between text-[10px] text-zinc-600 font-bold uppercase tracking-widest mt-2">
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-3 h-3" />
+                        {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                      <span className="text-zinc-800">#{item.id.slice(0, 4)}</span>
+                    </div>
                   </div>
                 </div>
+
+                {/* AI / CD Context Actions */}
+                {item.type === 'transport' && canUpdate && (
+                  <div className="border-t border-zinc-800 pt-3 flex flex-col gap-3">
+                    <div className="relative flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <input 
+                          type="text"
+                          placeholder="Falar algo sobre este transporte..."
+                          className="input-luxury h-9 text-[10px] pl-10 bg-zinc-950 border-zinc-900"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleAIUpdate(item.id, (e.target as HTMLInputElement).value);
+                              (e.target as HTMLInputElement).value = '';
+                            }
+                          }}
+                        />
+                        <Mic className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" />
+                      </div>
+                      {isCD && item.status === 'Pendente' && (
+                        <button 
+                          onClick={() => handleAIUpdate(item.id, "Iniciar transporte agora")}
+                          className="btn-luxury h-9 px-4 text-[10px] bg-zinc-800 text-zinc-300"
+                        >
+                          Assumir
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             ))}
             

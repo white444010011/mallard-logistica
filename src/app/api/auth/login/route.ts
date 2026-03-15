@@ -44,7 +44,14 @@ export async function POST(request: Request) {
     });
 
     // 4. Set HTTP-Only Cookie
-    const response = NextResponse.json({ success: true, role: user.role });
+    const response = NextResponse.json({ 
+      success: true, 
+      user: {
+        name: user.name,
+        role: user.role,
+        location: user.workLocation
+      }
+    });
     response.cookies.set('session', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

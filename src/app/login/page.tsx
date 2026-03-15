@@ -51,11 +51,8 @@ export default function AuthPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro ao processar');
 
-      // Save user locally for mock redundancy if needed, but session is in cookie
-      localStorage.setItem('mallard_user', JSON.stringify({
-        name: formData.name || 'User',
-        location: formData.location || 'Hub'
-      }));
+      // Save user locally
+      localStorage.setItem('mallard_user', JSON.stringify(data.user));
 
       router.push('/dashboard');
     } catch (err: any) {
@@ -116,13 +113,13 @@ export default function AuthPage() {
               >
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase tracking-widest font-bold text-zinc-600 ml-1">Seu Nome Completo</label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                  <div className="relative group">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 transition-colors group-focus-within:text-white mr-4" />
                     <input 
                       type="text"
                       required
                       placeholder="Identificação Mallard"
-                      className="input-luxury pl-12"
+                      className="input-luxury pl-14"
                       value={formData.name}
                       onChange={e => setFormData({ ...formData, name: e.target.value })}
                     />
@@ -131,11 +128,11 @@ export default function AuthPage() {
 
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase tracking-widest font-bold text-zinc-600 ml-1">Lotação de Trabalho</label>
-                  <div className="relative">
-                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                  <div className="relative group">
+                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 transition-colors group-focus-within:text-white mr-4" />
                     <select 
                       required
-                      className="input-luxury pl-12 appearance-none"
+                      className="input-luxury pl-14 appearance-none"
                       value={formData.location}
                       onChange={e => setFormData({ ...formData, location: e.target.value })}
                     >
@@ -178,13 +175,13 @@ export default function AuthPage() {
               >
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase tracking-widest font-bold text-zinc-600 ml-1">E-mail Institucional</label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 transition-colors group-focus-within:text-white mr-4" />
                     <input 
                       type="email"
                       required
                       placeholder="email@mallard.com"
-                      className="input-luxury pl-12"
+                      className="input-luxury pl-14"
                       value={formData.email}
                       onChange={e => setFormData({ ...formData, email: e.target.value })}
                     />
@@ -193,13 +190,13 @@ export default function AuthPage() {
 
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase tracking-widest font-bold text-zinc-600 ml-1">Senha de Acesso</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 transition-colors group-focus-within:text-white mr-4" />
                     <input 
                       type="password"
                       required
                       placeholder="••••••••"
-                      className="input-luxury pl-12"
+                      className="input-luxury pl-14"
                       value={formData.password}
                       onChange={e => setFormData({ ...formData, password: e.target.value })}
                     />
