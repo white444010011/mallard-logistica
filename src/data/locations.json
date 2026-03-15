@@ -1,0 +1,9 @@
+{
+  "locations": [
+    { "id": "cd", "name": "Centro de Distribuição", "type": "hub" },
+    { "id": "casa-de-degustação", "name": "Casa de Degustação", "type": "unit" },
+    { "id": "mallard-recepções", "name": "Casa de Degustação", "type": "unit" },
+    { "id": "confeitaria", "name": "Confeitaria", "type": "hub" },
+    { "id": "confeitaria", "name": "Confeitaria", "type": "hub" },
+  ]
+}
