@@ -22,14 +22,13 @@ export default async function ProtectedLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 md:pb-0 md:pl-64">
-      {/* Client component holding the App Bar & Navigation state */}
-      <MaterialLayoutClient role={session.role} />
-      
-      {/* Page Content */}
-      <main className="p-4 md:p-8 max-w-5xl mx-auto w-full mt-16 md:mt-0">
+    <div className="min-h-screen bg-black text-white selection:bg-white selection:text-black">
+      <main className="lux-container py-12 md:py-20 min-h-screen flex flex-col">
         {children}
       </main>
+      
+      {/* Bottom gap for mobile navigation if needed, keeping it clean for now */}
+      <div className="h-20 md:hidden" />
     </div>
   );
 }

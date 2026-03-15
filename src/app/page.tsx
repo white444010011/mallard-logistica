@@ -1,23 +1,23 @@
-import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
-import { decrypt } from '@/lib/auth';
+'use client';
 
-export default async function RootPage() {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('session');
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-  if (sessionCookie?.value) {
-    const session = await decrypt(sessionCookie.value);
-    
-    if (session) {
-      if (session.role === 'ADMIN' || session.role === 'SUPER_ADMIN') {
-        redirect('/admin');
-      } else {
-        redirect('/dashboard');
-      }
+export default function RootPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const user = localStorage.getItem('mallard_user');
+    if (user) {
+      router.push('/dashboard');
+    } else {
+      router.push('/login');
     }
-  }
+  }, [router]);
 
-  // If no valid session, go to login
-  redirect('/login');
+  return (
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="w-10 h-10 border-2 border-white border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 }

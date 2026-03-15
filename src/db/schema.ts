@@ -9,6 +9,8 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   role: roleEnum("role").default("USER").notNull(),
+  workLocation: text("work_location"),
+  whatsapp: text("whatsapp"), // Added for CD notifications
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -21,11 +23,21 @@ export const products = pgTable("products", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const transfers = pgTable("transfers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  photoUrl: text("photo_url").notNull(),
+  origin: text("origin").notNull(),
+  destination: text("destination").notNull(),
+  status: text("status").default("Pendente").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const orders = pgTable("orders", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").references(() => users.id).notNull(),
   status: orderStatusEnum("status").default("pending").notNull(),
-  assignedCdId: uuid("assigned_cd_id").references(() => users.id), // Which CD member assumed it
+  assignedCdId: uuid("assigned_cd_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -33,7 +45,7 @@ export const orders = pgTable("orders", {
 export const orderItems = pgTable("order_items", {
   id: uuid("id").primaryKey().defaultRandom(),
   orderId: uuid("order_id").references(() => orders.id).notNull(),
-  productId: uuid("product_id").references(() => products.id).notNull(),
-  quantity: integer("quantity").notNull(),
+  productName: text("product_name").notNull(), // Changed from productId to be more flexible/text-based
+  quantity: text("quantity").notNull(), // Changed to text for "2 boxes" etc
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

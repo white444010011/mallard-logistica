@@ -12,8 +12,8 @@ VALUES ('Saintbot', 'saintbot@mallard.com', '$2a$12$R9h/cIPz0gi.URNNX3rubedAKEQC
 ON CONFLICT (email) DO NOTHING;
 
 -- Insert CD User
-INSERT INTO users (name, email, password_hash, role)
-VALUES ('Equipe CD', 'cd@mallard.com', '$2a$12$R9h/cIPz0gi.URNNX3rubedAKEQC2a.lK36oNl96k./U/o.E4H.O6', 'CD')
+INSERT INTO users (name, email, password_hash, role, whatsapp)
+VALUES ('Equipe CD', 'cd@mallard.com', '$2a$12$R9h/cIPz0gi.URNNX3rubedAKEQC2a.lK36oNl96k./U/o.E4H.O6', 'CD', 'whatsapp:+55xx9xxxxxxx')
 ON CONFLICT (email) DO NOTHING;
 
 -- Insert regular user
