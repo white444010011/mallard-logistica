@@ -27,6 +27,8 @@ export const transfers = pgTable("transfers", {
   origin: text("origin").notNull(),
   destination: text("destination").notNull(),
   status: text("status").default("Pendente").notNull(),
+  deliveryPhotoUrl: text("delivery_photo_url"),
+  deliveredAt: timestamp("delivered_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

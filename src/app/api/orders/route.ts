@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { orders, orderItems, products, users } from '@/db/schema';
 import { cookies } from 'next/headers';
 import { decrypt } from '@/lib/auth';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 
 export async function POST(request: Request) {
   try {
@@ -98,7 +98,18 @@ async function sendWhatsAppNotification(orderId: string, itemsCount: number) {
 
 export async function GET() {
   try {
-     const data = await db.select().from(orders).orderBy(orders.createdAt);
+     const data = await db.select({
+       id: orders.id,
+       userId: orders.userId,
+       status: orders.status,
+       assignedCdId: orders.assignedCdId,
+       createdAt: orders.createdAt,
+       updatedAt: orders.updatedAt,
+       userName: users.name
+     })
+     .from(orders)
+     .leftJoin(users, eq(orders.userId, users.id))
+     .orderBy(desc(orders.createdAt));
      
      // Fetch items for each order (simple approach since it's a small app)
      const fullOrders = await Promise.all(data.map(async (order) => {

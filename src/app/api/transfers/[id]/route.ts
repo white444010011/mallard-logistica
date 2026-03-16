@@ -25,14 +25,20 @@ export async function PATCH(
       return NextResponse.json({ error: 'Acesso Negado' }, { status: 403 });
     }
 
-    const { status } = await request.json();
+    const { status, deliveryPhotoUrl } = await request.json();
 
     if (!status) {
       return NextResponse.json({ error: 'Status obrigatório' }, { status: 400 });
     }
 
+    const updateData: any = { status };
+    if (status === 'Entregue') {
+      updateData.deliveredAt = new Date();
+      if (deliveryPhotoUrl) updateData.deliveryPhotoUrl = deliveryPhotoUrl;
+    }
+
     await db.update(transfers)
-      .set({ status })
+      .set(updateData)
       .where(eq(transfers.id, id));
 
     return NextResponse.json({ success: true });
