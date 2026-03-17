@@ -22,7 +22,9 @@ import {
   User,
   History,
   Map,
-  ClipboardList
+  ClipboardList,
+  Share,
+  Info
 } from 'lucide-react';
 import locationsData from '@/data/locations.json';
 import { cn } from '@/lib/utils';
@@ -60,6 +62,9 @@ export default function Dashboard() {
   const [activeDeliveryId, setActiveDeliveryId] = useState<string | null>(null);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [isPWA, setIsPWA] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
   
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
@@ -85,12 +90,23 @@ export default function Dashboard() {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     setIsPWA(isStandalone);
 
+    // iOS Detection
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const iosDetected = /iphone|ipad|ipod/.test(userAgent);
+    setIsIOS(iosDetected);
+
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setInstallPrompt(e);
+      if (!isStandalone) setShowInstallBanner(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // If it's iOS and not PWA, show banner after short delay
+    if (iosDetected && !isStandalone) {
+      setTimeout(() => setShowInstallBanner(true), 2000);
+    }
 
     const fetchSession = async () => {
       const userData = localStorage.getItem('mallard_user');
@@ -99,6 +115,13 @@ export default function Dashboard() {
         return;
       }
       const parsedUser = JSON.parse(userData);
+      
+      // Force onboarding if profile is incomplete
+      if (!parsedUser.name || !parsedUser.location || parsedUser.name === 'Pendente') {
+        router.push('/login');
+        return;
+      }
+      
       setUser(parsedUser);
       
       try {
@@ -141,14 +164,21 @@ export default function Dashboard() {
     fetchSession();
 
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  }, [router]);
+  }, [router, isPWA]);
 
   const handleInstallClick = async () => {
+    if (isIOS) {
+      setShowInstallGuide(true);
+      setShowInstallBanner(false);
+      return;
+    }
+    
     if (!installPrompt) return;
     installPrompt.prompt();
     const { outcome } = await installPrompt.userChoice;
     if (outcome === 'accepted') {
       setInstallPrompt(null);
+      setShowInstallBanner(false);
     }
   };
 
@@ -337,13 +367,13 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-             {/* PWA Install Button - Web Version Only */}
-             {!isPWA && installPrompt && (
+             {/* PWA Install Link in Header */}
+             {!isPWA && (installPrompt || isIOS) && (
                <button 
                   onClick={handleInstallClick}
                   className="bg-zinc-900 border border-emerald-900/40 text-emerald-500 text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-full flex items-center gap-2 hover:bg-emerald-500 hover:text-black transition-all shadow-xl shadow-emerald-500/5 active:scale-95"
                >
-                 <DownloadCloud className="w-4 h-4" />
+                 <DownloadCloud className="w-3.5 h-3.5" />
                  Instalar WebApp
                </button>
              )}
@@ -590,6 +620,85 @@ export default function Dashboard() {
 
         </section>
       </div>
+
+      {/* Floating Install Notification Banner */}
+      <AnimatePresence>
+        {!isPWA && showInstallBanner && (
+          <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-24 left-6 right-6 z-60"
+          >
+            <div className="luxury-card p-4 flex items-center justify-between gap-4 bg-zinc-950/90 border-emerald-900/40 shadow-2xl shadow-emerald-900/10 active:scale-95 transition-transform" onClick={handleInstallClick}>
+               <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                     <Plus className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white">Instalar App Mallard</p>
+                    <p className="text-[9px] text-zinc-500 font-bold">Experiência mobile completa e agilidade.</p>
+                  </div>
+               </div>
+               <button className="text-zinc-600" onClick={(e) => { e.stopPropagation(); setShowInstallBanner(false); }}>
+                  <X className="w-4 h-4" />
+               </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* iOS Install Guide Modal */}
+      <AnimatePresence>
+        {showInstallGuide && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-110 bg-black/80 backdrop-blur-xl flex items-center justify-center p-6"
+          >
+            <div className="luxury-card w-full max-w-sm p-8 space-y-8 border-emerald-900/20">
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <DownloadCloud className="w-5 h-5 text-emerald-500" />
+                    <h3 className="text-xs font-black uppercase tracking-widest">Guia de Instalação iOS</h3>
+                  </div>
+                  <button onClick={() => setShowInstallGuide(false)}>
+                    <X className="w-4 h-4 text-zinc-700" />
+                  </button>
+               </div>
+
+               <div className="space-y-6">
+                  <div className="flex gap-4">
+                     <div className="w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[10px] font-bold text-zinc-500 shrink-0">1</div>
+                     <p className="text-xs text-zinc-300 font-medium leading-relaxed">
+                        Toque no botão de <span className="text-white font-bold bg-zinc-900 px-1.5 py-0.5 rounded flex-inline items-center gap-1 inline-flex"><Share className="w-3 h-3" /> Compartilhar</span> na barra do Safari.
+                     </p>
+                  </div>
+                  <div className="flex gap-4">
+                     <div className="w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[10px] font-bold text-zinc-500 shrink-0">2</div>
+                     <p className="text-xs text-zinc-300 font-medium leading-relaxed">
+                        Role para baixo e selecione a opção <span className="text-white font-bold">"Adicionar à Tela de Início"</span>.
+                     </p>
+                  </div>
+                  <div className="flex gap-4">
+                     <div className="w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[10px] font-bold text-zinc-500 shrink-0">3</div>
+                     <p className="text-xs text-zinc-300 font-medium leading-relaxed">
+                        Toque em <span className="text-emerald-500 font-black">Adicionar</span> no canto superior direito.
+                     </p>
+                  </div>
+               </div>
+
+               <button 
+                  onClick={() => setShowInstallGuide(false)}
+                  className="btn-luxury w-full mt-4 text-[10px] font-black uppercase"
+               >
+                  Entendido
+               </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Fullscreen Camera Modal */}
       <AnimatePresence>
