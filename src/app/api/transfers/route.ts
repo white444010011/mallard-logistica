@@ -27,13 +27,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 });
     }
 
-    const [newTransfer] = await db.insert(transfers).values({
+    const insertedTransfers = await db.insert(transfers).values({
       userId: session.userId,
       photoUrl,
       origin,
       destination,
       status: 'Pendente'
-    }).returning();
+    }).returning({ id: transfers.id });
+
+    const newTransfer = Array.isArray(insertedTransfers) && insertedTransfers[0];
+
+    if (!newTransfer || !newTransfer.id) {
+      console.error('Transfer creation returned invalid result:', insertedTransfers);
+      return NextResponse.json({ error: 'Falha ao criar transporte' }, { status: 500 });
+    }
 
     // Notify CD Team
     await notifyCD(`Novo transporte registrado: ${origin} -> ${destination}. Verifique o painel para assumir.`);

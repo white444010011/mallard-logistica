@@ -130,13 +130,25 @@ export default function Dashboard() {
           fetch('/api/orders')
         ]);
         
-        const transfers = await transRes.json();
-        const orders = await orderRes.json();
+        const transfersData = await transRes.json();
+        const ordersData = await orderRes.json();
+
+        if (!transRes.ok) {
+          console.error('API /api/transfers erro:', transfersData);
+        }
+        if (!orderRes.ok) {
+          console.error('API /api/orders erro:', ordersData);
+        }
+
+        const transfersArray = Array.isArray(transfersData) ? transfersData : [];
+        const ordersArray = Array.isArray(ordersData) ? ordersData : [];
         
         const isAdmin = parsedUser.role === 'ADMIN' || parsedUser.role === 'SUPER_ADMIN';
         
         let combined: FeedItem[] = [
-          ...transfers.map((t: any) => ({ ...t, type: 'transport' })),
+          ...transfersArray.map((t: any) => ({ ...t, type: 'transport' })),
+          ...ordersArray.map((o: any) => ({ ...o, type: 'order' }))
+        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           ...orders.map((o: any) => ({ ...o, type: 'order' }))
         ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
@@ -255,16 +267,28 @@ export default function Dashboard() {
     setIsSubmitting(true);
 
     try {
-      await fetch('/api/transfers', {
+      const res = await fetch('/api/transfers', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           photoUrl: capturedPhoto,
           origin: user.location,
           destination
         })
       });
+
+      const data = await res.json();
+      if (!res.ok) {
+        console.error('Falha ao criar transporte:', data);
+        alert(`Erro ao criar transporte: ${data.error || 'Erro desconhecido'}`);
+        setIsSubmitting(false);
+        return;
+      }
+
       window.location.reload();
     } catch (err) {
+      console.error('Erro de rede criar transporte:', err);
+      alert('Erro de rede ao criar transporte. Tente novamente.');
       setIsSubmitting(false);
     }
   };
